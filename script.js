@@ -6,6 +6,9 @@ const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
 const newSpaceModal = document.getElementById('new-space-modal');
 const newSpaceBtn = document.getElementById('new-space-btn');
+const messageForm = document.getElementById('message-form');
+const messageInput = document.getElementById('message-input');
+const messagesContainer = document.getElementById('messages');
 
 // 現在のユーザーと現在のスペース
 let currentUser = null;
@@ -41,6 +44,10 @@ function connectWebSocket() {
         } else if (message.type === 'space') {
             updateSpace(message.data);
         }
+    };
+
+    socket.onerror = (error) => {
+        console.error("WebSocket エラー:", error);
     };
 }
 
@@ -215,44 +222,26 @@ function displayMessages(messages, elementId) {
 }
 
 // 公開チャットへのメッセージ送信
-document.getElementById('message-form').addEventListener('submit', (e) => {
+messageForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const input = document.getElementById('message-input');
-    if (input.value) {
-        addMessage(input.value, 'publicMessages');
-        input.value = '';
-    }
-});
-
-// スペースチャットへのメッセージ送信
-document.getElementById('space-message-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const input = document.getElementById('space-message-input');
-    if (input.value) {
-        addMessage(input.value, 'spaceMessages');
-        input.value = '';
-    }
-});
-
-// メッセージの追加
-function addMessage(text, type) {
-    const timestamp = new Date().toLocaleTimeString();
-    const message = { user: currentUser.nickname, text, time: timestamp };
-    
-    if (type === 'publicMessages') {
+    if (messageInput.value.trim()) {
+        const message = {
+            user: currentUser.nickname,
+            text: messageInput.value.trim(),
+            time: new Date().toLocaleTimeString()
+        };
+        addMessageToChat(message);
         socket.send(JSON.stringify({ type: 'chat', data: message }));
-    } else if (type === 'spaceMessages') {
-        socket.send(JSON.stringify({ type: 'space', data: { spaceId: currentSpace.id, message } }));
+        messageInput.value = '';
     }
-}
+});
 
 // チャットにメッセージを追加
 function addMessageToChat(message) {
-    const messageArea = document.getElementById('messages');
     const messageElement = document.createElement('p');
     messageElement.textContent = `${message.time} ${message.user}: ${message.text}`;
-    messageArea.appendChild(messageElement);
-    messageArea.scrollTop = messageArea.scrollHeight;
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     // ローカルストレージも更新
     let publicMessages = JSON.parse(localStorage.getItem('publicMessages')) || [];
