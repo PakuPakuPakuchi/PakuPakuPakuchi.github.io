@@ -16,7 +16,7 @@ function showPage(page) {
 }
 
 function connectWebSocket() {
-    socket = new WebSocket('ws://localhost:8080');
+    socket = new WebSocket('ws://localhost:3180');
 
     socket.onopen = () => {
         console.log('WebSocket接続が確立されました');
